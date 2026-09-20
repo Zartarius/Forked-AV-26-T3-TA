@@ -83,12 +83,10 @@ std::vector<Row> decodeLog(const std::string& path) {
             swap(data_s[i + 1], data_s[15 - i]);
         }
         auto data = stoull(data_s, nullptr, 16);
-
         auto y_measured = int16_t(data & 0xffff);
         auto u_commanded = int16_t((data >> 16) & 0xffff);
 
-        const auto& row = (Row) {timestamp - timestamp_ff, u_commanded * 0.1, y_measured * 0.1};
-        rows.push_back(row);
+        rows.push_back((Row) {timestamp - timestamp_ff, u_commanded * 0.1, y_measured * 0.1});
     }
 
     return rows;
