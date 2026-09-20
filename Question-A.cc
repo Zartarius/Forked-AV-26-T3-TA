@@ -78,11 +78,11 @@ std::vector<Row> decodeLog(const std::string& path) {
         auto timestamp = stod(timestamp_s);
         timestamp_ff = (timestamp_ff >= 0.0) ? timestamp_ff : timestamp;
 
-        auto data_s_rev = string("");
-        for (size_t i = data_s.size(); i >= 2; i -= 2) {
-            data_s_rev += data_s.substr(i - 2, 2);
+        for (auto i = 0; i < 8; i += 2) {
+            swap(data_s[i], data_s[14 - i]);
+            swap(data_s[i + 1], data_s[15 - i]);
         }
-        auto data = stoull(data_s_rev, nullptr, 16);
+        auto data = stoull(data_s, nullptr, 16);
 
         auto y_measured = int16_t(data & 0xffff);
         auto u_commanded = int16_t((data >> 16) & 0xffff);
