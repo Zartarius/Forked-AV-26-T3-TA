@@ -1,12 +1,20 @@
 ### Part A - recover the data (CAN decode)
 
-Frame ID kept:
+Frame ID kept: 512
 
-Signal 1 (u_commanded):  byte position / endianness / signed? / scale / offset:
-Signal 2 (y_measured):   byte position / endianness / signed? / scale / offset:
+Signal 1 (u_commanded):  3-4 / little endian / signed / 0.1 scale / 0.0 offset:
+Signal 2 (y_measured):   1-2 / little endianness / signed / 0.1 scale / 0.0 offset:
 
 Notes (anything odd in the logs, how you checked the decode against the PNGs):
 
+Used the provided python script to plot the decoded values. First issue was
+that all 3 plots were just a single spike at around 17 seconds. Upon reading the
+spec again, i realised i forgot to minus the timestamp of the first kept frame.
+After fixing this, the u_commanded plots I had were extremely noisy, whereas
+the y_measured were just a flat line. After checking the reference plots,
+i realised my vertical axis was extremely off. I then realised i was not casting
+the bit-masked value, which defaults to an unsigned value even though i needed a signed, this
+explained the huge difference in the sizes of the values.
 
 
 ### Part B - identify system
@@ -18,3 +26,9 @@ Notes (anything odd in the logs, how you checked the decode against the PNGs):
 
 
 ### Part D - reflection
+
+(Part A reflection) As far as decoding went, it went perfectly almost first try as I spent over an hour
+trying to properly understand the resources provided before writing anything. I did get an out of range exception at first,
+because i was initially using stoll instead of stoull but i quickly realised that the data was
+just raw bits so I should use the unsigned version. Also I was unsure whether we could include more libraries, so
+reading the lines became quite tedious without stringstream.

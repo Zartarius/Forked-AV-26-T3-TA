@@ -50,10 +50,46 @@ struct Row {
 // Read the candump log at `path` and return one Row per STEER_ActuatorLog frame, in order.
 // Push one Row{t, u_commanded, y_measured} per kept frame.
 std::vector<Row> decodeLog(const std::string& path) {
-    std::vector<Row> rows;
+    using namespace std;
 
-    // TODO: your code here
-    (void)path;  // remove once you open the file
+    auto log_file = ifstream(path);
+    auto rows = vector<Row>();
+
+    string timestamp_s, can_id_s, data_s, _;
+
+    auto read_line = [&]() -> bool {
+        return
+            getline(log_file, _, '(') &&
+            getline(log_file, timestamp_s, ')') &&
+            getline(log_file, _, ')') &&
+            getline(log_file, _, ' ') &&
+            getline(log_file, _, ' ') &&
+            getline(log_file, can_id_s, '#') &&
+            getline(log_file, data_s, '\n');
+    };
+
+    auto timestamp_ff = -1.0;
+    while (read_line()) {
+        auto can_id = stoi(can_id_s, nullptr, 16);
+        if (can_id != 512) {
+            continue;
+        }
+
+        auto timestamp = stod(timestamp_s);
+        timestamp_ff = (timestamp_ff >= 0.0) ? timestamp_ff : timestamp;
+
+        auto data_s_rev = string("");
+        for (size_t i = data_s.size(); i >= 2; i -= 2) {
+            data_s_rev += data_s.substr(i - 2, 2);
+        }
+        auto data = stoull(data_s_rev, nullptr, 16);
+
+        auto y_measured = int16_t(data & 0xffff);
+        auto u_commanded = int16_t((data >> 16) & 0xffff);
+
+        const auto& row = (Row) {timestamp - timestamp_ff, u_commanded * 0.1, y_measured * 0.1};
+        rows.push_back(row);
+    }
 
     return rows;
 }
